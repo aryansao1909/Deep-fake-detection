@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Deepfake Detection</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css">
+    <style>
+        body {
+            background-color: #f8f9fa;
+            color: #343a40;
+        }
+        .container {
+            margin-top: 50px;
+            text-align: center;
+        }
+        .result {
+            margin-top: 20px;
+            font-size: 24px;
+        }
+        .alert {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Deepfake Detection</h1>
+        <p>Upload an image to detect if it's real or fake.</p>
+        <input type="file" id="file-input" accept="image/*" class="form-control" />
+        <button id="upload-button" class="btn btn-primary mt-3">Upload</button>
+        
+        <div class="result mt-3 alert alert-success" id="result"></div>
+        <div class="result mt-3 alert alert-danger" id="error"></div>
+    </div>
+
+    <script>
+        document.getElementById('upload-button').onclick = async () => {
+            const fileInput = document.getElementById('file-input');
+            const file = fileInput.files[0];
+            if (!file) {
+                alert("Please select an image file.");
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append("file", file);
+
+            try {
+                const response = await fetch("/predict", {
+                    method: "POST",
+                    body: formData,
+                });
+                const data = await response.json();
+
+                // Reset the error and result displays
+                document.getElementById('result').style.display = 'none';
+                document.getElementById('error').style.display = 'none';
+
+                if (response.ok) {
+                    document.getElementById('result').innerText = `Result: ${data.result}`;
+                    document.getElementById('result').classList.remove('alert-danger');
+                    document.getElementById('result').classList.add('alert-success');
+                    document.getElementById('result').style.display = 'block';
+                } else {
+                    document.getElementById('error').innerText = data.error || "An unknown error occurred.";
+                    document.getElementById('error').classList.remove('alert-success');
+                    document.getElementById('error').classList.add('alert-danger');
+                    document.getElementById('error').style.display = 'block';
+                }
+            } catch (error) {
+                console.error("Fetch error:", error);
+                document.getElementById('error').innerText = "An error occurred. Please try again.";
+                document.getElementById('error').classList.remove('alert-success');
+                document.getElementById('error').classList.add('alert-danger');
+                document.getElementById('error').style.display = 'block';
+            }
+        };
+    </script>
+</body>
+</html>
